@@ -12,16 +12,15 @@ private:
 	int height;
 	int width;
 	int blank_counter;
-	int safetyNumber(int vertical,int horizental);
+	int safetyNumber(int vertical,int horizontal);
 	bool isComplete();
+	bool isInSquare(int number,int vertical,int horizontal);
 };
 
 int main(){
 	Sudoku sudoku;
 
 	sudoku.display();
-
-	cout<<endl<<endl;
 
 	sudoku.solve();
 
@@ -43,6 +42,16 @@ Sudoku::Sudoku(){
 					{0,9,0,0,0,0,0,0,8},
 					{2,7,0,9,5,0,0,0,0}};
 
+	// int tmp[][9] = {{5,0,9,0,0,0,2,0,7},
+	// 				{0,8,0,2,0,0,0,3,0},
+	// 				{3,0,0,0,0,0,0,0,8},
+	// 				{0,0,0,1,0,5,0,8,0},
+	// 				{0,0,0,0,0,0,0,0,0},
+	// 				{0,1,0,3,0,2,0,0,0},
+	// 				{6,0,0,0,0,0,0,0,5},
+	// 				{0,5,0,0,0,3,0,1,0},
+	// 				{7,0,2,0,0,0,8,0,9}};
+
 
 	int i,j;
 	for(i=0;i<height;i++)
@@ -53,6 +62,7 @@ Sudoku::Sudoku(){
 
 void Sudoku::solve(){
 	int i,j,safety_number;
+	// int input;
 	while(!isComplete()){
 		blank_counter = 0;
 		for(i=0;i<height;i++){
@@ -66,20 +76,34 @@ void Sudoku::solve(){
 				board[i][j] = safety_number;
 			}
 		}
-		display();
+		// display();
+		// cin>>input;
 	}
 }
 
-int Sudoku::safetyNumber(int vertical,int horizental){
-	if(board[vertical][horizental] != 0)
-		return -1;
+bool Sudoku::isInSquare(int number,int vertical,int horizontal){
+	int postion = vertical/3 * 3 + horizontal/3;
+	int x,y,x_s=postion/3*3,y_s=postion%3*3;
+	for(int i=0;i<9;i++){
+		x = x_s + i/3;
+		y = y_s + i%3;
+		if(board[x][y] == number)
+			return true;
+	}
+
+	return false;
+}
+
+int Sudoku::safetyNumber(int vertical,int horizontal){
+	if(board[vertical][horizontal] != 0)
+			return -1;
 
 	int number,i,safety_counter=0,safety_number=0;
 	bool is_safety;
 	for(number=1;number<=9;number++){
 		is_safety = false;
 		for(i=0;i<width;i++){
-			if(board[vertical][i] == number || board[i][horizental] == number)
+			if(board[vertical][i] == number || board[i][horizontal] == number || isInSquare(number,vertical,horizontal))
 				break;
 			if(i == 8)
 				is_safety = true;
@@ -111,5 +135,5 @@ void Sudoku::display(){
 		cout<<endl;
 	}
 
-	cout<<endl<<endl;
+	cout<<endl;
 }
