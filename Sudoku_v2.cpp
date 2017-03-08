@@ -6,7 +6,8 @@ using namespace std;
 //if there has only one number which can be filled into a zero block
 //then filled it in
 //else check next zero block
-//until all of zero block have been filled with a specific number
+//until none of the zero block which can be filled with a specific number
+//then we recusively filled number untile get a solution
 
 class Sudoku{
 public:
@@ -17,10 +18,10 @@ private:
 	int board[9][9];
 	int height;
 	int width;
-	int blank_counter;
 	int safetyNumber(int vertical,int horizontal);
-	bool isComplete();
 	bool isInSquare(int number,int vertical,int horizontal);
+	bool fillIn(int vertical,int horizontal);
+	bool isSafety(int number,int vertical,int horizontal);
 };
 
 int main(){
@@ -36,27 +37,28 @@ int main(){
 Sudoku::Sudoku(){
 	height = 9;
 	width = 9;
-	blank_counter = height*width;
 
-	int tmp[][9] = {{0,0,0,0,1,5,0,9,2},
-					{9,0,0,0,0,0,0,8,0},
-					{0,1,3,4,0,0,5,0,0},
-					{0,0,0,3,0,0,8,4,6},
-					{1,0,6,0,8,0,7,0,5},
-					{3,8,7,0,0,4,0,0,0},
-					{0,0,5,0,0,8,6,7,0},
-					{0,9,0,0,0,0,0,0,8},
-					{2,7,0,9,5,0,0,0,0}};
+	//low level
+	// int tmp[][9] = {{0,0,0,0,1,5,0,9,2},
+	// 				{9,0,0,0,0,0,0,8,0},
+	// 				{0,1,3,4,0,0,5,0,0},
+	// 				{0,0,0,3,0,0,8,4,6},
+	// 				{1,0,6,0,8,0,7,0,5},
+	// 				{3,8,7,0,0,4,0,0,0},
+	// 				{0,0,5,0,0,8,6,7,0},
+	// 				{0,9,0,0,0,0,0,0,8},
+	// 				{2,7,0,9,5,0,0,0,0}};
 
-	// int tmp[][9] = {{5,0,9,0,0,0,2,0,7},
-	// 				{0,8,0,2,0,0,0,3,0},
-	// 				{3,0,0,0,0,0,0,0,8},
-	// 				{0,0,0,1,0,5,0,8,0},
-	// 				{0,0,0,0,0,0,0,0,0},
-	// 				{0,1,0,3,0,2,0,0,0},
-	// 				{6,0,0,0,0,0,0,0,5},
-	// 				{0,5,0,0,0,3,0,1,0},
-	// 				{7,0,2,0,0,0,8,0,9}};
+	//high level
+	int tmp[][9] = {{5,0,9,0,0,0,2,0,7},
+					{0,8,0,2,0,0,0,3,0},
+					{3,0,0,0,0,0,0,0,8},
+					{0,0,0,1,0,5,0,8,0},
+					{0,0,0,0,0,0,0,0,0},
+					{0,1,0,3,0,2,0,0,0},
+					{6,0,0,0,0,0,0,0,5},
+					{0,5,0,0,0,3,0,1,0},
+					{7,0,2,0,0,0,8,0,9}};
 
 
 	int i,j;
@@ -66,25 +68,51 @@ Sudoku::Sudoku(){
 
 }
 
+bool Sudoku::fillIn(int vertical,int horizontal){
+	while(board[vertical][horizontal] != 0){
+		horizontal += 1;
+		if(horizontal == width){
+			vertical += 1;
+			horizontal = 0;
+		}
+
+		if(vertical == height)
+			return true;
+	}
+
+	for(int number=1;number<=9;number++){
+		if(isSafety(number,vertical,horizontal))
+			board[vertical][horizontal] = number;
+		else
+			continue;
+
+		if(fillIn(vertical,horizontal))
+			return true;
+		else
+			board[vertical][horizontal] = 0;
+	}
+
+	return false;
+}
+
 void Sudoku::solve(){
 	int i,j,safety_number;
-	// int input;
-	while(!isComplete()){
-		blank_counter = 0;
+	bool is_complete = false;
+	while(!is_complete){
+		is_complete = true;
 		for(i=0;i<height;i++){
 			for(j=0;j<width;j++){
 				safety_number = safetyNumber(i,j);
-				if(safety_number == -1){
-					if(board[i][j] == 0)
-						blank_counter += 1;
+				if(safety_number == -1)
 					continue;
-				}
+
 				board[i][j] = safety_number;
+				is_complete = false;
 			}
 		}
-		// display();
-		// cin>>input;
 	}
+
+	fillIn(0,0);
 }
 
 bool Sudoku::isInSquare(int number,int vertical,int horizontal){
@@ -100,23 +128,27 @@ bool Sudoku::isInSquare(int number,int vertical,int horizontal){
 	return false;
 }
 
+bool Sudoku::isSafety(int number,int vertical,int horizontal){
+	if(isInSquare(number,vertical,horizontal))
+		return false;
+
+	for(int i=0;i<width;i++)
+		if(board[vertical][i] == number || board[i][horizontal] == number)
+			return false;
+
+	return true;
+}
+
 int Sudoku::safetyNumber(int vertical,int horizontal){
 	if(board[vertical][horizontal] != 0)
 			return -1;
 
-	int number,i,safety_counter=0,safety_number=0;
-	bool is_safety;
+	int number,safety_counter=0,safety_number=0;
+
 	for(number=1;number<=9;number++){
-		is_safety = false;
-		for(i=0;i<width;i++){
-			if(board[vertical][i] == number || board[i][horizontal] == number || isInSquare(number,vertical,horizontal))
-				break;
-			if(i == 8)
-				is_safety = true;
-		}
-		if(is_safety){
-			safety_number = number;
+		if(isSafety(number,vertical,horizontal)){
 			safety_counter += 1;
+			safety_number = number;
 		}
 	}
 
@@ -124,10 +156,6 @@ int Sudoku::safetyNumber(int vertical,int horizontal){
 		return safety_number;
 
 	return -1;
-}
-
-bool Sudoku::isComplete(){
-	return blank_counter == 0;
 }
 
 void Sudoku::display(){
