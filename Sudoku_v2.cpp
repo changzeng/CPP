@@ -4,7 +4,7 @@ using namespace std;
 
 //algorithm:
 //if there has only one number which can be filled into a zero block
-//then filled in
+//then filled it in
 //else check next zero block
 //until all of zero block have been filled with a specific number
 
